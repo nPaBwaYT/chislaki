@@ -186,7 +186,7 @@ class Matrix:
         result_matrix = Matrix(result_matrix_rows)
         return result_matrix
 
-    def determinant(self):
+    def determinant(self) -> int | float:
         """Determinant"""
         if self.length != self.height:
             raise TypeError
@@ -213,7 +213,7 @@ class Matrix:
 
         return inverse_matrix
 
-    def alg_comp(self, row_index: int, col_index: int):
+    def alg_comp(self, row_index: int, col_index: int) -> int | float:
         return (-1) ** (row_index + col_index) * Matrix([row[0:col_index] + row[col_index + 1::] for row in (
                 self.rows[0:row_index] + self.rows[row_index + 1::])]).determinant()
 
@@ -225,6 +225,19 @@ class Matrix:
         for row in self.rows:
             row[first_index], row[second_index] = row[second_index], row[first_index]
         return self
+
+    def multiply_row(self, row_index: int, multiplier: int | float):
+        self[row_index] = map(lambda x: x * multiplier, self[row_index])
+        return self
+
+    def get_height(self) -> int:
+        return self.height
+
+    def get_length(self) -> int:
+        return self.length
+
+    def get_rows(self) -> List[List[int | float]]:
+        return self.rows
 
 
 def main():
@@ -242,6 +255,20 @@ def main():
     print(~a)
     a.swap_columns(1, 2)
     print(a, (~a).normalize(), ~a, a.determinant(), sep='\n')
+
+    """"""
+    print("—————————————————————————————————")
+
+    a = Matrix([[1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9]])
+    p = Matrix([[1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]])
+
+    a.swap_rows(0,1)
+    p.swap_rows(0, 1)
+    print(a, ~p @ a, sep='\n')
 
 
 if __name__ == "__main__":
