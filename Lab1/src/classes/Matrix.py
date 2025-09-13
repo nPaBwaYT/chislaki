@@ -33,7 +33,7 @@ class Matrix:
 
         result_matrix_rows = [
             [this_element + other_element for (this_element, other_element) in zip(this_row, other_row)] for
-            (this_row, other_row) in zip(self.rows, other.rows)]
+            (this_row, other_row) in zip(self.rows, other)]
 
         result_matrix = Matrix(result_matrix_rows)
         return result_matrix
@@ -46,7 +46,7 @@ class Matrix:
         if not (self.length == other.length and self.height == other.height):
             raise TypeError
 
-        for (row_index, row) in enumerate(other.rows, 0):
+        for (row_index, row) in enumerate(other, 0):
             for (col_index, element) in enumerate(row, 0):
                 self[row_index][col_index] += element
 
@@ -62,7 +62,7 @@ class Matrix:
 
         result_matrix_rows = [
             [this_element - other_element for (this_element, other_element) in zip(this_row, other_row)] for
-            (this_row, other_row) in zip(self.rows, other.rows)]
+            (this_row, other_row) in zip(self.rows, other)]
 
         result_matrix = Matrix(result_matrix_rows)
         return result_matrix
@@ -75,7 +75,7 @@ class Matrix:
         if not (self.length == other.length and self.height == other.height):
             raise TypeError
 
-        for (row_index, row) in enumerate(other.rows, 0):
+        for (row_index, row) in enumerate(other, 0):
             for (col_index, element) in enumerate(row, 0):
                 self[row_index][col_index] -= element
 
@@ -113,7 +113,7 @@ class Matrix:
             raise TypeError
 
         result_matrix_rows = [
-            [sum([self[row_index][index] * other.rows[index][col_index] for index in range(self.length)]) for
+            [sum([self[row_index][index] * other[index][col_index] for index in range(self.length)]) for
              col_index in range(other.length)] for row_index in range(self.height)]
 
         result_matrix = Matrix(result_matrix_rows)
@@ -128,7 +128,7 @@ class Matrix:
             raise TypeError
 
         result_matrix_rows = [
-            [sum([self[row_index][index] * other.rows[index][col_index] for index in range(self.length)]) for
+            [sum([self[row_index][index] * other[index][col_index] for index in range(self.length)]) for
              col_index in range(other.length)] for row_index in range(self.height)]
 
         self.rows = result_matrix_rows
@@ -148,7 +148,8 @@ class Matrix:
         if self.height == 0:
             return "()"
         if self.height == 1:
-            return f"({' '.join(list(map(str, self[0])))})"
+            return f"({' '.join(list(map(lambda x: str(x.__round__(4)), self[0])))})"
+
         rows = ["/"] + ["│" for i in range(1, self.height - 1)] + ["\\"]
         for col_index in range(self.length):
             col_width = max([len(str(self[row_index][col_index].__round__(4))) for row_index in range(self.height)])

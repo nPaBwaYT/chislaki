@@ -70,6 +70,7 @@ def main():
                                               range(row_index + 1, matrix_lu.get_length())])) /
                matrix_lu[row_index][row_index])
         x_rows[row_index] = [row]
+
     matrix_x = Matrix(x_rows)
 
     print(f"x = {matrix_x.transpose()}T")
