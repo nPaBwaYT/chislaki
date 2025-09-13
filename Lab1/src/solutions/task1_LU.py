@@ -53,7 +53,7 @@ def main():
                 matrix_a.swap_rows(col_index, col_index)
 
     matrix_lu = lu_factorization(matrix_a)
-    print(f"LU-matrix:\n{matrix_lu}\n")
+    print(f"Det(A) = {matrix_a.determinant()}\n\nInverse matrix:\n{~matrix_a}\n\nLU-matrix:\n{matrix_lu}\n")
 
     y_rows = []
     for row_index in range(matrix_lu.get_height()):
