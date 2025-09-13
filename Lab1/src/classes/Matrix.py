@@ -255,7 +255,7 @@ def main():
                 [0, 1, 0],
                 [0, 0, 1]])
 
-    a.swap_rows(0,1)
+    a.swap_rows(0, 1)
     p.swap_rows(0, 1)
     print(a, ~p @ a, sep='\n')
 

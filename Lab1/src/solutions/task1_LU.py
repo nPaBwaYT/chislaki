@@ -4,12 +4,12 @@ import sys
 
 def inp() -> (Matrix, Matrix):
     if len(sys.argv) == 1:
-        sys.stdout.write("Введите матрицу СЛАУ (A|b) (матрица A должна быть невырожденной)\nв формате csv. Например, матрицу\n"
-                         "/1 2 │ 3\\\n"
-                         "\\4 5 │ 6/\n"
-                         "требуется записать как\n"
-                         "1,2,3\n"
-                         "4,5,6\n")
+        print("Введите матрицу СЛАУ (A|b) (матрица A должна быть невырожденной)\nв формате csv. Например, матрицу\n"
+              "/1 2 │ 3\\\n"
+              "\\4 5 │ 6/\n"
+              "требуется записать как\n"
+              "1,2,3\n"
+              "4,5,6\n")
     else:
         f = open(sys.argv[1], 'r', encoding="UTF-8")
         old_stdin, sys.stdin = sys.stdin, f
@@ -67,7 +67,7 @@ def main():
     x_rows = [[0] for i in range(matrix_lu.get_height())]
     for row_index in range(matrix_lu.get_height() - 1, -1, -1):
         row = ((matrix_y[row_index][0] - sum([matrix_lu[row_index][col_index] * x_rows[col_index][0] for col_index in
-                                             range(row_index + 1, matrix_lu.get_length())])) /
+                                              range(row_index + 1, matrix_lu.get_length())])) /
                matrix_lu[row_index][row_index])
         x_rows[row_index] = [row]
     matrix_x = Matrix(x_rows)
