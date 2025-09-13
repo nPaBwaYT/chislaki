@@ -6,32 +6,16 @@ from math import log10
 class Matrix:
     """Matrix class, nothing special"""
 
-    def __init__(self, rows: List[List[int | float]] | Tuple[Tuple[int | float]], eps: float = 1e-6):
+    def __init__(self, rows: List[List[int | float]] | Tuple[Tuple[int | float]]):
         """Initialisation"""
         first_row_length = len(rows[0])
         for row in rows[1::]:
             if len(row) != first_row_length:
                 raise BadInputException
 
-        self.rows = rows
+        self.rows = rows.copy()
         self.length = first_row_length
         self.height = len(rows)
-        self.eps = eps
-
-    def normalize(self):
-        for (row_index, row) in enumerate(self.rows):
-            for (col_index, element) in enumerate(row):
-                if element >= 0:
-                    if int(element) != int(element + self.eps):
-                        self[row_index][col_index] = int(element) + 1
-                    elif int(element) != int(element - self.eps):
-                        self[row_index][col_index] = int(element)
-                else:
-                    if int(element) != int(element + self.eps):
-                        self[row_index][col_index] = int(element)
-                    elif int(element) != int(element - self.eps):
-                        self[row_index][col_index] = int(element) - 1
-        return self
 
     def __getitem__(self, item):
         return self.rows[item]
@@ -161,15 +145,19 @@ class Matrix:
 
     def __str__(self):
         """Representation"""
+        if self.height == 0:
+            return "()"
+        if self.height == 1:
+            return f"({' '.join(list(map(str, self[0])))})"
         rows = ["/"] + ["│" for i in range(1, self.height - 1)] + ["\\"]
         for col_index in range(self.length):
-            col_width = max([len(str(self[row_index][col_index])) for row_index in range(self.height)])
+            col_width = max([len(str(self[row_index][col_index].__round__(4))) for row_index in range(self.height)])
 
             for row_index in range(self.height):
                 if col_index != 0:
                     rows[row_index] += " "
 
-                rows[row_index] += f"{self[row_index][col_index]: ^{col_width}}"
+                rows[row_index] += f"{self[row_index][col_index].__round__(4): ^{col_width}}"
 
         rows[0] += "\\"
         rows[self.height - 1] += "/"
@@ -214,6 +202,7 @@ class Matrix:
         return inverse_matrix
 
     def alg_comp(self, row_index: int, col_index: int) -> int | float:
+        """Finds algebraic completion for element at [row][col]"""
         return (-1) ** (row_index + col_index) * Matrix([row[0:col_index] + row[col_index + 1::] for row in (
                 self.rows[0:row_index] + self.rows[row_index + 1::])]).determinant()
 
@@ -254,7 +243,7 @@ def main():
                 [2, 2, -2]])
     print(~a)
     a.swap_columns(1, 2)
-    print(a, (~a).normalize(), ~a, a.determinant(), sep='\n')
+    print(a, ~a, a.determinant(), sep='\n')
 
     """"""
     print("—————————————————————————————————")
