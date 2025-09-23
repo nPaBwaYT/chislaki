@@ -220,6 +220,10 @@ class Matrix:
         self[row_index] = map(lambda x: x * multiplier, self[row_index])
         return self
 
+    def subtract_rows(self, row_index: int, from_index: int, multiplier: int | float):
+        self[from_index] = list(map(lambda x: x[0] - x[1] * multiplier, zip(self[from_index], self[row_index])))
+        return self
+
     def get_height(self) -> int:
         return self.height
 
@@ -259,6 +263,19 @@ def main():
     a.swap_rows(0, 1)
     p.swap_rows(0, 1)
     print(a, ~p @ a, sep='\n')
+
+    """"""
+    print("—————————————————————————————————")
+
+    a = Matrix([[1, 0, 0, 0],
+                [2, 1, 0, 0],
+                [2, 0, 1, 0],
+                [2, 0, 0, 1]])
+    b = Matrix([[1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 3, 1]])
+    print(a @ b)
 
 
 if __name__ == "__main__":

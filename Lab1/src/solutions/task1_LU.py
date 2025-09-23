@@ -23,37 +23,41 @@ def inp() -> (Matrix, Matrix):
     return matrix_a, matrix_b
 
 
-def lu_factorization(matrix: Matrix) -> Matrix:
-    lu_rows = []
+def lu_factorization(matrix: Matrix) -> (Matrix, Matrix):
+    matrix_u = Matrix(matrix.get_rows())
+    matrix_l = Matrix([[1 if i == j else 0 for i in range(matrix.get_length())] for j in range(matrix.get_height())])
+
+    inverse_a_rows = [[1 if i == j else 0 for i in range(matrix.get_length())] for j in range(matrix.get_height())]
+    inverse_matrix = Matrix(inverse_a_rows)
+
     for row_index in range(matrix.get_height()):
-        lu_rows.append([])
-        for col_index in range(matrix.get_length()):
-            if col_index >= row_index:
-                u_element = matrix[row_index][col_index] - sum(
-                    [lu_rows[row_index][index] * lu_rows[index][col_index] for index in range(row_index)])
-                lu_rows[row_index].append(u_element)
+        for from_index in range(row_index + 1, matrix.get_length()):
+            m = matrix_u[from_index][row_index] / matrix_u[row_index][row_index]
+            matrix_u.subtract_rows(row_index, from_index, m)
+            inverse_matrix.subtract_rows(row_index, from_index, m)
+            matrix_l[from_index][row_index] = -inverse_matrix[from_index][row_index]
 
-            else:
-                l_element = (matrix[row_index][col_index] - sum(
-                    [lu_rows[row_index][index] * lu_rows[index][col_index] for index in range(col_index)])) / \
-                            lu_rows[col_index][col_index]
-                lu_rows[row_index].append(l_element)
+    matrix_lu = Matrix([[matrix_l[i][j] if i > j else matrix_u[i][j] for j in range(matrix.get_length())] for i in
+                        range(matrix.get_height())])
 
-    matrix_lu = Matrix(lu_rows)
-
-    return matrix_lu
+    return matrix_lu, inverse_matrix
 
 
 def main():
     matrix_a, matrix_b = inp()
+    a = 1
 
     for col_index in range(matrix_a.get_length()):
         for row_index in range(col_index, matrix_a.get_height()):
             if matrix_a[row_index][col_index] > matrix_a[col_index][col_index]:
                 matrix_a.swap_rows(col_index, col_index)
+                a *= -1
 
-    matrix_lu = lu_factorization(matrix_a)
-    print(f"Det(A) = {matrix_a.determinant()}\n\nInverse matrix:\n{~matrix_a}\n\nLU-matrix:\n{matrix_lu}\n")
+    matrix_lu, inverse_matrix = lu_factorization(matrix_a)
+    det = 1
+    for i in range(matrix_lu.get_height()):
+        det *= matrix_lu[i][i]
+    print(f"Det(A) = {det:.4f}\n\nInverse matrix:\n{~matrix_a}\n\nLU-matrix:\n{matrix_lu}\n")
 
     y_rows = []
     for row_index in range(matrix_lu.get_height()):
@@ -65,11 +69,18 @@ def main():
     print(f"y = {matrix_y.transpose()}T")
 
     x_rows = [[0] for i in range(matrix_lu.get_height())]
+    matrix_c = Matrix(matrix_y.get_rows())
+    matrix_lu_buff = Matrix([[matrix_lu[i][j] if j >= i else 0 for j in range(matrix_lu.get_length())] for i in
+                             range(matrix_lu.get_height())])
+
     for row_index in range(matrix_lu.get_height() - 1, -1, -1):
-        row = ((matrix_y[row_index][0] - sum([matrix_lu[row_index][col_index] * x_rows[col_index][0] for col_index in
-                                              range(row_index + 1, matrix_lu.get_length())])) /
-               matrix_lu[row_index][row_index])
-        x_rows[row_index] = [row]
+        for from_index in range(row_index - 1, -1, -1):
+            m = matrix_lu_buff[from_index][row_index] / matrix_lu_buff[row_index][row_index]
+            matrix_lu_buff.subtract_rows(row_index, from_index, m)
+            inverse_matrix.subtract_rows(row_index, from_index, m)
+            matrix_c.subtract_rows(row_index, from_index, m)
+
+        x_rows[row_index] = [matrix_c[row_index][0] / matrix_lu[row_index][row_index]]
 
     matrix_x = Matrix(x_rows)
 
