@@ -1,4 +1,5 @@
 from classes.Matrix import Matrix
+from classes.Exceptions import BadInputException
 import sys
 
 
@@ -59,6 +60,9 @@ def main():
     det = 1
     for i in range(matrix_lu.get_height()):
         det *= matrix_lu[i][i]
+        if det == 0:
+            raise BadInputException
+
     print(f"Det(A) = {det:.4f}\n\nInverse matrix:\n{~matrix_a}\n\nLU-matrix:\n{matrix_lu}\n\ny = {matrix_y.transpose()}T")
 
     x_rows = [[0] for i in range(matrix_lu.get_height())]
