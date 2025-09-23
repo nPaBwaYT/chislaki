@@ -217,7 +217,7 @@ class Matrix:
         return self
 
     def multiply_row(self, row_index: int, multiplier: int | float):
-        self[row_index] = map(lambda x: x * multiplier, self[row_index])
+        self[row_index] = list(map(lambda x: x * multiplier, self[row_index]))
         return self
 
     def subtract_rows(self, row_index: int, from_index: int, multiplier: int | float):

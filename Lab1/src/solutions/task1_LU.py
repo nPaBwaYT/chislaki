@@ -54,6 +54,7 @@ def main():
         for row_index in range(col_index, matrix_a.get_height()):
             if matrix_a[row_index][col_index] > matrix_a[col_index][col_index]:
                 matrix_a.swap_rows(col_index, col_index)
+                matrix_b.swap_rows(col_index, col_index)
                 a *= -1
 
     matrix_lu, matrix_y, inverse_matrix = lu_factorization(matrix_a, matrix_b)
@@ -63,10 +64,10 @@ def main():
         if det == 0:
             raise BadInputException
 
-    print(f"Det(A) = {det:.4f}\n\nInverse matrix:\n{~matrix_a}\n\nLU-matrix:\n{matrix_lu}\n\ny = {matrix_y.transpose()}T")
+    print(f"det(A) = {det:.4f}\n\nLU-matrix:\n{matrix_lu}\n\ny = {matrix_y.transpose()}T\n")
 
     x_rows = [[0] for i in range(matrix_lu.get_height())]
-    matrix_c = Matrix(matrix_y.get_rows())
+    matrix_x = Matrix(matrix_y.get_rows())
     matrix_lu_buff = Matrix([[matrix_lu[i][j] if j >= i else 0 for j in range(matrix_lu.get_length())] for i in
                              range(matrix_lu.get_height())])
 
@@ -75,13 +76,15 @@ def main():
             m = matrix_lu_buff[from_index][row_index] / matrix_lu_buff[row_index][row_index]
             matrix_lu_buff.subtract_rows(row_index, from_index, m)
             inverse_matrix.subtract_rows(row_index, from_index, m)
-            matrix_c.subtract_rows(row_index, from_index, m)
+            matrix_x.subtract_rows(row_index, from_index, m)
 
-        x_rows[row_index] = [matrix_c[row_index][0] / matrix_lu[row_index][row_index]]
+        inverse_matrix.multiply_row(row_index, 1/matrix_lu_buff[row_index][row_index])
+        matrix_x.multiply_row(row_index, 1/matrix_lu_buff[row_index][row_index])
 
-    matrix_x = Matrix(x_rows)
+    print(f"Inverse matrix:\n{inverse_matrix}\n\nx = {matrix_x.transpose()}T")
 
-    print(f"x = {matrix_x.transpose()}T")
+    print(f"\nb = {matrix_b.transpose()}T\nAx = {(matrix_a @ matrix_x).transpose()}T\n")
+    print(f"A * A^-1 =\n{matrix_a @ inverse_matrix}\n")
 
 
 if __name__ == "__main__":

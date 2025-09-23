@@ -1,3 +1,4 @@
+from Exceptions import BadInputException
 from classes.Matrix import Matrix
 import sys
 
@@ -45,6 +46,8 @@ def main():
         coeff_d = matrix_b[i][0]
 
         det_a *= coeff_b + coeff_a * coefficients_p[i]
+        if det_a == 0:
+            raise BadInputException
 
         coefficients_p.append(-coeff_c / (coeff_b + coeff_a * coefficients_p[i]))
         coefficients_q.append((coeff_d - coeff_a * coefficients_q[i]) / (coeff_b + coeff_a * coefficients_p[i]))
@@ -55,7 +58,9 @@ def main():
 
     rows_x.pop()
     matrix_x = Matrix(rows_x)
-    print(det_a, f"{matrix_x.transpose()}T", sep='\n')
+    print(f"det(A) = {det_a:.4f}\n{matrix_x.transpose()}T", sep='\n')
+
+    print(f"\nb = {matrix_b.transpose()}T\nAx = {(matrix_a @ matrix_x).transpose()}T")
 
 
 if __name__ == "__main__":
