@@ -23,6 +23,9 @@ class Matrix:
     def __setitem__(self, key, value):
         self.rows[key] = value
 
+    def __iter__(self):
+        return self.rows.__iter__()
+
     def __add__(self, other):
         """Addition"""
         if not isinstance(other, Matrix):
@@ -144,29 +147,44 @@ class Matrix:
         return result_matrix
 
     def __str__(self):
-        """Representation"""
+        """Default representation"""
+        return self.__format__(".4f")
+
+    def __format__(self, format_spec):
+        """Format"""
         if self.height == 0:
             return "()"
+
+        precision = 4
+        if format_spec and format_spec.startswith('.') and format_spec[-1] == 'f':
+            try:
+                precision = int(format_spec[1:-1])
+            except (ValueError, IndexError):
+                pass
+
         if self.height == 1:
-            return f"({' '.join(list(map(lambda x: str(x.__round__(4)), self[0])))})"
+            formatted_elements = [str(round(x, precision)) for x in self[0]]
+            return f"({' '.join(formatted_elements)})"
 
         rows = ["/"] + ["│" for i in range(1, self.height - 1)] + ["\\"]
+
         for col_index in range(self.length):
-            col_width = max([len(str(self[row_index][col_index].__round__(4))) for row_index in range(self.height)])
+            col_width = max(len(str(round(self[row_index][col_index], precision)))
+                            for row_index in range(self.height))
 
             for row_index in range(self.height):
                 if col_index != 0:
                     rows[row_index] += " "
 
-                rows[row_index] += f"{self[row_index][col_index].__round__(4): ^{col_width}}"
+                rounded_value = round(self[row_index][col_index], precision)
+                rows[row_index] += f"{str(rounded_value): ^{col_width}}"
 
         rows[0] += "\\"
         rows[self.height - 1] += "/"
         for i in range(1, self.height - 1):
             rows[i] += "│"
 
-        result = "\n".join(rows)
-        return result
+        return "\n".join(rows)
 
     def transpose(self):
         """Matrix transposition"""
@@ -202,6 +220,9 @@ class Matrix:
 
         return inverse_matrix
 
+    def __len__(self):
+        return self.height
+
     def alg_comp(self, row_index: int, col_index: int) -> int | float:
         """Finds algebraic completion for element at [row][col]"""
         return (-1) ** (row_index + col_index) * Matrix([row[0:col_index] + row[col_index + 1::] for row in (
@@ -232,6 +253,12 @@ class Matrix:
 
     def get_rows(self) -> List[List[int | float]]:
         return self.rows
+
+    def get_row(self, index: int):
+        return Matrix([self[index]])
+
+    def get_column(self, index: int):
+        return Matrix([[self[row_index][index]] for row_index in range(self.height)])
 
 
 def main():

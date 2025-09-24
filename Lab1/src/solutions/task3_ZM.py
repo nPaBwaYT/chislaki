@@ -61,13 +61,24 @@ def main():
             if (ans := sys.stdin.readline().strip(" \t\n").lower()) != "y":
                 raise BadInputException
 
+    matrix_b = Matrix([[matrix_alpha[i][j] if i > j else 0 for j in range(matrix_alpha.get_length())] for i in
+                       range(matrix_alpha.get_height())])
+    matrix_c = Matrix([[matrix_alpha[i][j] if i <= j else 0 for j in range(matrix_alpha.get_length())] for i in
+                       range(matrix_alpha.get_height())])
+    matrix_e = Matrix(
+        [[1 if i == j else 0 for j in range(matrix_b.get_length())] for i in range(matrix_b.get_height())])
+
+    matrix_eb = ~(matrix_e - matrix_b)
+    matrix_ebc = matrix_eb @ matrix_c
+    matrix_ebbeta = matrix_eb @ matrix_beta
+
     matrix_x = Matrix(matrix_beta.get_rows())
 
     if alpha_norm > 1:
         print("Невозможно провести оценку кол-ва итераций")
         while 1:
             prev_x = Matrix(matrix_x.get_rows())
-            matrix_x = matrix_beta + matrix_alpha @ matrix_x
+            matrix_x = matrix_ebc @ prev_x + matrix_ebbeta
 
             x_norm = max(map(lambda x: abs(x[0]), matrix_x - prev_x))
             if x_norm < eps:
@@ -75,20 +86,25 @@ def main():
 
     else:
         beta_norm: float
+        c_norm: float
         match norm_type:
             case 1:
                 beta_norm = sum(map(lambda x: abs(x[0]), matrix_beta))
+                c_norm = max([sum(map(lambda x: abs(x), row)) for row in matrix_c.transpose()])
             case 2:
                 beta_norm = sum(map(lambda x: x[0] * x[0], matrix_beta)) ** 0.5
+                c_norm = sum(map(lambda x: x * x, chain(*matrix_c))) ** 0.5
             case _:
                 beta_norm = max(map(lambda x: abs(x[0]), matrix_beta))
+                c_norm = max([sum(map(lambda x: abs(x), row)) for row in matrix_c])
 
-        iterations_count = (log(eps) - log(beta_norm) + log(1 - alpha_norm)) / log(alpha_norm)
-        print(f"norm beta: {beta_norm:.4f}\n\nestimation of the number of iterations: {iterations_count:.4f}\n")
+        iterations_count = (log(eps) - log(beta_norm) + log(1 - alpha_norm)) / log(c_norm)
+        print(f"norm beta: {beta_norm:.4f}\nnorm c: {c_norm:.4f}\n\n"
+              f"estimation of the number of iterations: {iterations_count:.4f}\n")
 
         for i in range(1, int(iterations_count) + 2):
             prev_x = Matrix(matrix_x.get_rows())
-            matrix_x = matrix_beta + matrix_alpha @ matrix_x
+            matrix_x = matrix_ebc @ prev_x + matrix_ebbeta
 
             match norm_type:
                 case 1:
@@ -98,7 +114,7 @@ def main():
                 case _:
                     x_norm = max(map(lambda x: abs(x[0]), matrix_x - prev_x))
 
-            eps_k = alpha_norm / (1 - alpha_norm) * x_norm
+            eps_k = c_norm / (1 - alpha_norm) * x_norm
             print(f"eps({i}) = {eps_k:.{int(-log10(eps)) + 2}f}", end="; ")
             if eps_k < eps:
                 print("\b\b\n")
