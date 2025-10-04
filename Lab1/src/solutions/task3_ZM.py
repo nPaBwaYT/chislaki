@@ -40,6 +40,7 @@ def is_diag_major(matrix: Matrix) -> bool:
 
 def main():
     eps, matrix_a, matrix_b = inp()
+    print(f"target eps: {eps}\n")
 
     matrix_alpha = Matrix(
         [[-matrix_a[i][j] / matrix_a[i][i] if i != j else 0 for j in range(matrix_a.get_length())] for i in
