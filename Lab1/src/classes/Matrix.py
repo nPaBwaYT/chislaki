@@ -23,6 +23,9 @@ class Matrix:
     def __setitem__(self, key, value):
         self.rows[key] = value
 
+    def __iter__(self):
+        return self.rows.__iter__()
+
     def __add__(self, other):
         """Addition"""
         if not isinstance(other, Matrix):
@@ -33,7 +36,7 @@ class Matrix:
 
         result_matrix_rows = [
             [this_element + other_element for (this_element, other_element) in zip(this_row, other_row)] for
-            (this_row, other_row) in zip(self.rows, other.rows)]
+            (this_row, other_row) in zip(self.rows, other)]
 
         result_matrix = Matrix(result_matrix_rows)
         return result_matrix
@@ -46,7 +49,7 @@ class Matrix:
         if not (self.length == other.length and self.height == other.height):
             raise TypeError
 
-        for (row_index, row) in enumerate(other.rows, 0):
+        for (row_index, row) in enumerate(other, 0):
             for (col_index, element) in enumerate(row, 0):
                 self[row_index][col_index] += element
 
@@ -62,7 +65,7 @@ class Matrix:
 
         result_matrix_rows = [
             [this_element - other_element for (this_element, other_element) in zip(this_row, other_row)] for
-            (this_row, other_row) in zip(self.rows, other.rows)]
+            (this_row, other_row) in zip(self.rows, other)]
 
         result_matrix = Matrix(result_matrix_rows)
         return result_matrix
@@ -75,7 +78,7 @@ class Matrix:
         if not (self.length == other.length and self.height == other.height):
             raise TypeError
 
-        for (row_index, row) in enumerate(other.rows, 0):
+        for (row_index, row) in enumerate(other, 0):
             for (col_index, element) in enumerate(row, 0):
                 self[row_index][col_index] -= element
 
@@ -113,7 +116,7 @@ class Matrix:
             raise TypeError
 
         result_matrix_rows = [
-            [sum([self[row_index][index] * other.rows[index][col_index] for index in range(self.length)]) for
+            [sum([self[row_index][index] * other[index][col_index] for index in range(self.length)]) for
              col_index in range(other.length)] for row_index in range(self.height)]
 
         result_matrix = Matrix(result_matrix_rows)
@@ -128,7 +131,7 @@ class Matrix:
             raise TypeError
 
         result_matrix_rows = [
-            [sum([self[row_index][index] * other.rows[index][col_index] for index in range(self.length)]) for
+            [sum([self[row_index][index] * other[index][col_index] for index in range(self.length)]) for
              col_index in range(other.length)] for row_index in range(self.height)]
 
         self.rows = result_matrix_rows
@@ -144,28 +147,44 @@ class Matrix:
         return result_matrix
 
     def __str__(self):
-        """Representation"""
+        """Default representation"""
+        return self.__format__(".4f")
+
+    def __format__(self, format_spec):
+        """Format"""
         if self.height == 0:
             return "()"
+
+        precision = 4
+        if format_spec and format_spec.startswith('.') and format_spec[-1] == 'f':
+            try:
+                precision = int(format_spec[1:-1])
+            except (ValueError, IndexError):
+                pass
+
         if self.height == 1:
-            return f"({' '.join(list(map(str, self[0])))})"
+            formatted_elements = [str(round(x, precision)) for x in self[0]]
+            return f"({' '.join(formatted_elements)})"
+
         rows = ["/"] + ["│" for i in range(1, self.height - 1)] + ["\\"]
+
         for col_index in range(self.length):
-            col_width = max([len(str(self[row_index][col_index].__round__(4))) for row_index in range(self.height)])
+            col_width = max(len(str(round(self[row_index][col_index], precision)))
+                            for row_index in range(self.height))
 
             for row_index in range(self.height):
                 if col_index != 0:
                     rows[row_index] += " "
 
-                rows[row_index] += f"{self[row_index][col_index].__round__(4): ^{col_width}}"
+                rounded_value = round(self[row_index][col_index], precision)
+                rows[row_index] += f"{str(rounded_value): ^{col_width}}"
 
         rows[0] += "\\"
         rows[self.height - 1] += "/"
         for i in range(1, self.height - 1):
             rows[i] += "│"
 
-        result = "\n".join(rows)
-        return result
+        return "\n".join(rows)
 
     def transpose(self):
         """Matrix transposition"""
@@ -201,6 +220,9 @@ class Matrix:
 
         return inverse_matrix
 
+    def __len__(self):
+        return self.height
+
     def alg_comp(self, row_index: int, col_index: int) -> int | float:
         """Finds algebraic completion for element at [row][col]"""
         return (-1) ** (row_index + col_index) * Matrix([row[0:col_index] + row[col_index + 1::] for row in (
@@ -216,7 +238,11 @@ class Matrix:
         return self
 
     def multiply_row(self, row_index: int, multiplier: int | float):
-        self[row_index] = map(lambda x: x * multiplier, self[row_index])
+        self[row_index] = list(map(lambda x: x * multiplier, self[row_index]))
+        return self
+
+    def subtract_rows(self, row_index: int, from_index: int, multiplier: int | float):
+        self[from_index] = list(map(lambda x: x[0] - x[1] * multiplier, zip(self[from_index], self[row_index])))
         return self
 
     def get_height(self) -> int:
@@ -227,6 +253,12 @@ class Matrix:
 
     def get_rows(self) -> List[List[int | float]]:
         return self.rows
+
+    def get_row(self, index: int):
+        return Matrix([self[index]])
+
+    def get_column(self, index: int):
+        return Matrix([[self[row_index][index]] for row_index in range(self.height)])
 
 
 def main():
@@ -258,6 +290,19 @@ def main():
     a.swap_rows(0, 1)
     p.swap_rows(0, 1)
     print(a, ~p @ a, sep='\n')
+
+    """"""
+    print("—————————————————————————————————")
+
+    a = Matrix([[1, 0, 0, 0],
+                [2, 1, 0, 0],
+                [2, 0, 1, 0],
+                [2, 0, 0, 1]])
+    b = Matrix([[1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 3, 1]])
+    print(a @ b)
 
 
 if __name__ == "__main__":
