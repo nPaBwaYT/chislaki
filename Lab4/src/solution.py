@@ -16,6 +16,35 @@ def euler_method_system(f: Callable, y0: np.ndarray, t_span: Tuple[float, float]
     return t, y
 
 
+def euler_cauchy_method(f: Callable, y0: np.ndarray, t_span: Tuple[float, float], h: float):
+    t0, tf = t_span
+    n = int((tf - t0) / h) + 1
+    t = np.linspace(t0, tf, n)
+    y = np.zeros((n, len(y0)))
+    y[0] = y0
+
+    for i in range(n - 1):
+        y_pred = y[i] + h * f(t[i], y[i])
+        y[i + 1] = y[i] + h * 0.5 * (f(t[i], y[i]) + f(t[i] + h, y_pred))
+
+    return t, y
+
+
+def improved_euler_method(f: Callable, y0: np.ndarray, t_span: Tuple[float, float], h: float):
+    t0, tf = t_span
+    n = int((tf - t0) / h) + 1
+    t = np.linspace(t0, tf, n)
+    y = np.zeros((n, len(y0)))
+    y[0] = y0
+
+    for i in range(n - 1):
+        y_half = y[i] + 0.5 * h * f(t[i], y[i])
+        t_half = t[i] + 0.5 * h
+        y[i + 1] = y[i] + h * f(t_half, y_half)
+
+    return t, y
+
+
 def runge_kutta_4_system(f: Callable, y0: np.ndarray, t_span: Tuple[float, float], h: float):
     t0, tf = t_span
     n = int((tf - t0) / h) + 1
@@ -82,12 +111,18 @@ def exact_solution_cauchy(x):
 
 print("ЗАДАЧА КОШИ")
 
-y0_cauchy = np.array([1.0, 1.0])  # y(0)=1, y'(0)=1
+y0_cauchy = np.array([1.0, 1.0])
 t_span = (0.0, 1.0)
 h = 0.1
 
 t_euler, y_euler = euler_method_system(cauchy_problem, y0_cauchy, t_span, h)
 y_euler_solution = y_euler[:, 0]
+
+t_euler_cauchy, y_euler_cauchy = euler_cauchy_method(cauchy_problem, y0_cauchy, t_span, h)
+y_euler_cauchy_solution = y_euler_cauchy[:, 0]
+
+t_improved, y_improved = improved_euler_method(cauchy_problem, y0_cauchy, t_span, h)
+y_improved_solution = y_improved[:, 0]
 
 t_rk4, y_rk4 = runge_kutta_4_system(cauchy_problem, y0_cauchy, t_span, h)
 y_rk4_solution = y_rk4[:, 0]
@@ -97,29 +132,25 @@ y_adams_solution = y_adams[:, 0]
 
 y_exact_cauchy = exact_solution_cauchy(t_rk4)
 
-_, y_rk4_2h = runge_kutta_4_system(cauchy_problem, y0_cauchy, t_span, 2 * h)
 from scipy.interpolate import interp1d
-
 t_2h, y_2h = runge_kutta_4_system(cauchy_problem, y0_cauchy, t_span, 2 * h)
 y_2h_interp = interp1d(t_2h, y_2h[:, 0], kind='cubic')(t_rk4)
 error_rr = runge_romberg_error(y_rk4_solution, y_2h_interp)
 
-# Вывод результатов
 print("\nСравнение решений в конечной точке x=1.0:")
 print(f"Точное решение: y(1.0) = {y_exact_cauchy[-1]:.10f}")
-print(
-    f"Метод Эйлера:   y(1.0) = {y_euler_solution[-1]:.10f}, погрешность = {abs(y_euler_solution[-1] - y_exact_cauchy[-1]):.2e}")
-print(
-    f"Метод РК4:      y(1.0) = {y_rk4_solution[-1]:.10f}, погрешность = {abs(y_rk4_solution[-1] - y_exact_cauchy[-1]):.2e}")
-print(
-    f"Метод Адамса:   y(1.0) = {y_adams_solution[-1]:.10f}, погрешность = {abs(y_adams_solution[-1] - y_exact_cauchy[-1]):.2e}")
+print(f"Метод Эйлера:         y(1.0) = {y_euler_solution[-1]:.10f}, погрешность = {abs(y_euler_solution[-1] - y_exact_cauchy[-1]):.2e}")
+print(f"Метод Эйлера-Коши:    y(1.0) = {y_euler_cauchy_solution[-1]:.10f}, погрешность = {abs(y_euler_cauchy_solution[-1] - y_exact_cauchy[-1]):.2e}")
+print(f"Улучшенный Эйлер:     y(1.0) = {y_improved_solution[-1]:.10f}, погрешность = {abs(y_improved_solution[-1] - y_exact_cauchy[-1]):.2e}")
+print(f"Метод РК4:            y(1.0) = {y_rk4_solution[-1]:.10f}, погрешность = {abs(y_rk4_solution[-1] - y_exact_cauchy[-1]):.2e}")
+print(f"Метод Адамса:         y(1.0) = {y_adams_solution[-1]:.10f}, погрешность = {abs(y_adams_solution[-1] - y_exact_cauchy[-1]):.2e}")
 
 print(f"\nОценка погрешности методом Рунге-Ромберга для РК4: max = {np.max(error_rr):.2e}")
 
-print("\nx\t\tЭйлер   \t\tРК4     \t\tАдамс   \t\tТочное")
+print("\nx\t\tЭйлер\t\tЭйлер-Коши\tУлучшенный\tРК4\t\tАдамс\t\tТочное")
 for i in range(len(t_rk4)):
-    print(f"{t_rk4[i]:.1f}\t\t{y_euler_solution[i]:.6f}\t\t{y_rk4_solution[i]:.6f}\t\t"
-          f"{y_adams_solution[i]:.6f}\t\t{y_exact_cauchy[i]:.6f}")
+    print(f"{t_rk4[i]:.1f}\t\t{y_euler_solution[i]:.6f}\t\t{y_euler_cauchy_solution[i]:.6f}\t\t"
+          f"{y_improved_solution[i]:.6f}\t\t{y_rk4_solution[i]:.6f}\t\t{y_adams_solution[i]:.6f}\t\t{y_exact_cauchy[i]:.6f}")
 
 
 def shooting_method(f: Callable, bc_left: Callable, bc_right: Callable,
@@ -175,11 +206,11 @@ def finite_difference_method(p, q, f_func, bc_left, bc_right,
     A[0, 0] = -3
     A[0, 1] = 4
     A[0, 2] = -1
-    B[0] = 2 * h * (-1)  # y'(0) = -1
+    B[0] = 2 * h * (-1)
 
     A[n, n - 2] = 1
     A[n, n - 1] = -4
-    A[n, n] = 3 + 4 * h  # 3 + 2*(2h) для y'(1) + 2y(1)
+    A[n, n] = 3 + 4 * h
     B[n] = 2 * h * 3
 
     y = np.linalg.solve(A, B)
@@ -209,7 +240,6 @@ def exact_solution_boundary(x):
     return x + np.exp(-2 * x)
 
 
-# Функции для конечно-разностного метода
 def p_func(x):
     return 4 * x / (2 * x + 1)
 
@@ -222,15 +252,12 @@ def f_func(x):
     return 0
 
 
-# Решение краевой задачи №7
 print("\n" + "=" * 60)
 print("КРАЕВАЯ ЗАДАЧА")
 
-# Параметры
 t_span_boundary = (0.0, 1.0)
 h_boundary = 0.1
 
-# Решение методом стрельбы
 print("\nМетод стрельбы:")
 t_shooting, y_shooting, eta_final, phi_final, iter_count = shooting_method(
     boundary_problem, bc_left_boundary, bc_right_boundary,
@@ -242,16 +269,13 @@ print(f"Найденный параметр eta = {eta_final:.6f}")
 print(f"Невязка на правой границе = {phi_final:.2e}")
 print(f"Количество итераций = {iter_count}")
 
-# Решение конечно-разностным методом
 print("\nКонечно-разностный метод:")
 x_fd, y_fd = finite_difference_method(p_func, q_func, f_func,
                                       bc_left_boundary, bc_right_boundary,
                                       t_span_boundary, h_boundary)
 
-# Точное решение
 y_exact_boundary = exact_solution_boundary(t_shooting)
 
-# Вывод результатов
 print("\nСравнение решений в нескольких точках:")
 print("x\t\tСтрельба\t\tКонечно-разн.\t\tТочное")
 for i in range(0, len(t_shooting), 2):
@@ -261,48 +285,49 @@ print(f"\nПогрешности в конечной точке x=1.0:")
 print(f"Метод стрельбы:    {abs(y_shooting_solution[-1] - y_exact_boundary[-1]):.2e}")
 print(f"Конечно-разностный: {abs(y_fd[-1] - y_exact_boundary[-1]):.2e}")
 
-
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
-# График 1: Задача Коши
 ax1 = axes[0, 0]
 ax1.plot(t_rk4, y_exact_cauchy, 'k-', linewidth=2, label='Точное решение')
-ax1.plot(t_euler, y_euler_solution, 'b--', marker='o', markersize=4, label='Метод Эйлера')
-ax1.plot(t_rk4, y_rk4_solution, 'r--', marker='s', markersize=4, label='Метод РК4')
-ax1.plot(t_adams, y_adams_solution, 'g--', marker='^', markersize=4, label='Метод Адамса')
+ax1.plot(t_euler, y_euler_solution, 'b--', marker='o', markersize=3, label='Эйлер')
+ax1.plot(t_euler_cauchy, y_euler_cauchy_solution, 'c--', marker='s', markersize=3, label='Эйлер-Коши')
+ax1.plot(t_improved, y_improved_solution, 'm--', marker='^', markersize=3, label='Улучшенный Эйлер')
+ax1.plot(t_rk4, y_rk4_solution, 'r--', marker='d', markersize=3, label='РК4')
+ax1.plot(t_adams, y_adams_solution, 'g--', marker='v', markersize=3, label='Адамс')
 ax1.set_xlabel('x')
 ax1.set_ylabel('y(x)')
-ax1.set_title('Задача Коши №7: Сравнение методов')
+ax1.set_title('Задача Коши: Сравнение методов')
 ax1.grid(True, alpha=0.3)
-ax1.legend()
+ax1.legend(fontsize=8)
 
-# График 2: Погрешности для задачи Коши
 ax2 = axes[0, 1]
 ax2.plot(t_euler, np.abs(y_euler_solution - exact_solution_cauchy(t_euler)),
-         'b-', label='Метод Эйлера')
+         'b-', label='Эйлер')
+ax2.plot(t_euler_cauchy, np.abs(y_euler_cauchy_solution - exact_solution_cauchy(t_euler_cauchy)),
+         'c-', label='Эйлер-Коши')
+ax2.plot(t_improved, np.abs(y_improved_solution - exact_solution_cauchy(t_improved)),
+         'm-', label='Улучшенный Эйлер')
 ax2.plot(t_rk4, np.abs(y_rk4_solution - y_exact_cauchy),
-         'r-', label='Метод РК4')
+         'r-', label='РК4')
 ax2.plot(t_adams, np.abs(y_adams_solution - y_exact_cauchy),
-         'g-', label='Метод Адамса')
+         'g-', label='Адамс')
 ax2.set_xlabel('x')
 ax2.set_ylabel('Абсолютная погрешность')
-ax2.set_title('Задача Коши №7: Погрешности методов')
+ax2.set_title('Задача Коши: Погрешности методов')
 ax2.set_yscale('log')
 ax2.grid(True, alpha=0.3)
-ax2.legend()
+ax2.legend(fontsize=8)
 
-# График 3: Краевая задача
 ax3 = axes[1, 0]
 ax3.plot(t_shooting, y_exact_boundary, 'k-', linewidth=2, label='Точное решение')
 ax3.plot(t_shooting, y_shooting_solution, 'b--', marker='o', markersize=4, label='Метод стрельбы')
 ax3.plot(x_fd, y_fd, 'r--', marker='s', markersize=4, label='Конечно-разностный')
 ax3.set_xlabel('x')
 ax3.set_ylabel('y(x)')
-ax3.set_title('Краевая задача №7: Сравнение методов')
+ax3.set_title('Краевая задача: Сравнение методов')
 ax3.grid(True, alpha=0.3)
 ax3.legend()
 
-# График 4: Погрешности для краевой задачи
 ax4 = axes[1, 1]
 ax4.plot(t_shooting, np.abs(y_shooting_solution - y_exact_boundary),
          'b-', label='Метод стрельбы')
@@ -310,12 +335,10 @@ ax4.plot(x_fd, np.abs(y_fd - exact_solution_boundary(x_fd)),
          'r-', label='Конечно-разностный')
 ax4.set_xlabel('x')
 ax4.set_ylabel('Абсолютная погрешность')
-ax4.set_title('Краевая задача №7: Погрешности методов')
+ax4.set_title('Краевая задача: Погрешности методов')
 ax4.set_yscale('log')
 ax4.grid(True, alpha=0.3)
 ax4.legend()
 
 plt.tight_layout()
 plt.show()
-
-
