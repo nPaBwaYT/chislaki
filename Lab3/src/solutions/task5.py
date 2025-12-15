@@ -1,5 +1,9 @@
+import numpy as np
+
+import Lab1.src.solutions.task3_SI as lq
+
+# 3.23
 def rectangle_method(f, a, b, n):
-    """Метод прямоугольников"""
     h = (b - a) / n
     result = 0
     for i in range(n):
@@ -8,8 +12,8 @@ def rectangle_method(f, a, b, n):
     return result * h
 
 
+# 3.25
 def trapezoidal_method(f, a, b, n):
-    """Метод трапеций"""
     h = (b - a) / n
     result = 0.5 * (f(a) + f(b))
     for i in range(1, n):
@@ -17,10 +21,10 @@ def trapezoidal_method(f, a, b, n):
     return result * h
 
 
+# 3.28
 def simpson_method(f, a, b, n):
-    """Метод Симпсона"""
     if n % 2 != 0:
-        n += 1  # Делаем n четным
+        n += 1
     h = (b - a) / n
     result = f(a) + f(b)
 
@@ -34,13 +38,56 @@ def simpson_method(f, a, b, n):
     return result * h / 3
 
 
+# 3.30
 def runge_romberg(F_h, F_kh, k, p):
-    """Метод Рунге-Ромберга для уточнения результата"""
     return F_h + (F_h - F_kh) / (k ** p - 1)
 
 
 def f(x):
     return 1 / (3 * x ** 2 + 4 * x + 2)
+
+
+# Функции для оценки производных
+def f_second_derivative(x):
+    """Вторая производная функции f(x) = 1/(3x² + 4x + 2)"""
+    # Аналитически вычисленная вторая производная
+    denom = (3*x**2 + 4*x + 2)
+    return (2*(18*x**2 + 24*x + 8)) / (denom**3) - (6*(6*x + 4)**2) / (denom**4)
+
+
+def f_fourth_derivative(x):
+    """Четвертая производная функции f(x) = 1/(3x² + 4x + 2)"""
+    # Упрощенная оценка четвертой производной
+    # Для сложных функций можно использовать численное дифференцирование
+    denom = (3*x**2 + 4*x + 2)
+    return 24*(324*x**4 + 864*x**3 + 864*x**2 + 384*x + 64) / (denom**5)
+
+
+def estimate_error_rectangle(f_second, a, b, h):
+    """Оценка погрешности метода прямоугольников по формуле 3.24"""
+    # 3.24 - R ≤ (1/24) * h² * M₂ * (b - a)
+    x_samples = np.linspace(a, b, 1000)
+    M_2 = max(abs(f_second(x)) for x in x_samples)
+    error_bound = (1/24) * h**2 * M_2 * (b - a)
+    return error_bound
+
+
+def estimate_error_trapezoidal(f_second, a, b, h):
+    """Оценка погрешности метода трапеций по формуле 3.26"""
+    # 3.26 - R ≤ (b - a)/12 * h² * M₂
+    x_samples = np.linspace(a, b, 1000)
+    M_2 = max(abs(f_second(x)) for x in x_samples)
+    error_bound = (b - a) / 12 * h**2 * M_2
+    return error_bound
+
+
+def estimate_error_simpson(f_fourth, a, b, h):
+    """Оценка погрешности метода Симпсона по формуле 3.29"""
+    # 3.29 - R ≤ (b - a)/180 * h⁴ * M₄
+    x_samples = np.linspace(a, b, 1000)
+    M_4 = max(abs(f_fourth(x)) for x in x_samples)
+    error_bound = (b - a) / 180 * h**4 * M_4
+    return error_bound
 
 
 a, b = -2, 2
@@ -83,8 +130,28 @@ print(f"  h1: {simp_h1:.6f}")
 print(f"  h2: {simp_h2:.6f}")
 print(f"  Уточненное: {simp_refined:.6f}")
 
-# Оценка погрешности
-print(f"\nРазности между шагами (оценка погрешности):")
-print(f"Прямоугольники: {abs(rect_h2 - rect_h1):.6f}")
-print(f"Трапеции: {abs(trap_h2 - trap_h1):.6f}")
-print(f"Симпсон: {abs(simp_h2 - simp_h1):.6f}")
+# Оценка погрешности по разностям
+print(f"\nПогрешность (по разности результатов):")
+print(f"Прямоугольники: {abs(rect_refined - rect_h1):.6f}")
+print(f"Трапеции: {abs(trap_refined - trap_h1):.6f}")
+print(f"Симпсон: {abs(simp_refined - simp_h1):.6f}")
+
+# Оценка погрешности по формулам из методички
+print(f"\nОценка погрешностей:")
+print("Прямоугольники:")
+error_rect_h1 = estimate_error_rectangle(f_second_derivative, a, b, h1)
+error_rect_h2 = estimate_error_rectangle(f_second_derivative, a, b, h2)
+print(f"  h1: {error_rect_h1:.6f}")
+print(f"  h2: {error_rect_h2:.6f}")
+
+print("Трапеция:")
+error_trap_h1 = estimate_error_trapezoidal(f_second_derivative, a, b, h1)
+error_trap_h2 = estimate_error_trapezoidal(f_second_derivative, a, b, h2)
+print(f"  h1: {error_trap_h1:.6f}")
+print(f"  h2: {error_trap_h2:.6f}")
+
+print("Симпсон:")
+error_simp_h1 = estimate_error_simpson(f_fourth_derivative, a, b, h1/2)  # Для Симпсона h = (b-a)/(2n)
+error_simp_h2 = estimate_error_simpson(f_fourth_derivative, a, b, h2/2)
+print(f"  h1: {error_simp_h1:.6f}")
+print(f"  h2: {error_simp_h2:.6f}")

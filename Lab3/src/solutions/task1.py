@@ -1,8 +1,12 @@
 import numpy as np
+import math
+import matplotlib.pyplot as plt
+
+import Lab1.src.solutions.task3_SI as lq
 
 
+# 3.5
 def lagrange_interpolation(x, y, x_point):
-    """Интерполяционный многочлен Лагранжа"""
     n = len(x)
     result = 0.0
 
@@ -16,8 +20,8 @@ def lagrange_interpolation(x, y, x_point):
     return result
 
 
+# 3.7
 def divided_differences(x, y):
-    """Разделенные разности для многочлена Ньютона"""
     n = len(x)
     coef = np.zeros([n, n])
     coef[:, 0] = y
@@ -29,8 +33,8 @@ def divided_differences(x, y):
     return coef[0, :]
 
 
+# 3.8
 def newton_interpolation(x, y, x_point):
-    """Интерполяционный многочлен Ньютона"""
     n = len(x)
     coef = divided_differences(x, y)
     result = coef[0]
@@ -74,3 +78,55 @@ print(f"X* = {x_star}")
 print(f"Точное значение: {exact_a:.6f}")
 print(f"Лагранж: {lagrange_b:.6f}, погрешность: {abs(lagrange_b - exact_a):.6f}")
 print(f"Ньютон: {newton_b:.6f}, погрешность: {abs(newton_b - exact_a):.6f}")
+
+plt.figure(figsize=(12, 5))
+
+# Создаем гладкие кривые для отображения
+x_smooth = np.linspace(0.1, 5.5, 500)
+y_exact = np.sqrt(x_smooth)
+
+y_lagrange_a = [lagrange_interpolation(x_a, y_a, xi) for xi in x_smooth]
+y_newton_a = [newton_interpolation(x_a, y_a, xi) for xi in x_smooth]
+
+y_lagrange_b = [lagrange_interpolation(x_b, y_b, xi) for xi in x_smooth]
+y_newton_b = [newton_interpolation(x_b, y_b, xi) for xi in x_smooth]
+
+# График 1: Вариант a)
+plt.subplot(1, 2, 1)
+plt.plot(x_smooth, y_exact, 'k-', linewidth=2, label='Точная функция: √x')
+plt.plot(x_smooth, y_lagrange_a, 'b--', linewidth=1.5, label='Лагранж')
+plt.plot(x_smooth, y_newton_a, 'r:', linewidth=1.5, label='Ньютон')
+plt.scatter(x_a, y_a, color='red', s=80, zorder=5, label='Узлы интерполяции')
+plt.scatter([x_star], [exact_a], color='green', s=100, marker='*', zorder=6, label=f'X* = {x_star}')
+plt.axvline(x=x_star, color='green', linestyle='--', alpha=0.5)
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Вариант a) - Интерполяция √x')
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.xlim(0, 5.5)
+
+# График 2: Вариант б)
+plt.subplot(1, 2, 2)
+plt.plot(x_smooth, y_exact, 'k-', linewidth=2, label='Точная функция: √x')
+plt.plot(x_smooth, y_lagrange_b, 'b--', linewidth=1.5, label='Лагранж')
+plt.plot(x_smooth, y_newton_b, 'r:', linewidth=1.5, label='Ньютон')
+plt.scatter(x_b, y_b, color='red', s=80, zorder=5, label='Узлы интерполяции')
+plt.scatter([x_star], [exact_a], color='green', s=100, marker='*', zorder=6, label=f'X* = {x_star}')
+plt.axvline(x=x_star, color='green', linestyle='--', alpha=0.5)
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Вариант б) - Интерполяция √x')
+plt.grid(True, alpha=0.3)
+plt.legend()
+plt.xlim(0, 5.5)
+
+plt.tight_layout()
+plt.show()
+
+# Вывод результатов в точке X*
+print(f"\nСравнение в точке X* = {x_star}:")
+print(f"Точное значение: {exact_a:.6f}")
+print(f"Вариант a) - Лагранж: {lagrange_a:.6f}, погрешность: {abs(lagrange_a - exact_a):.6f}")
+print(f"Вариант б) - Лагранж: {lagrange_b:.6f}, погрешность: {abs(lagrange_b - exact_a):.6f}")
+print(f"Разница между вариантами: {abs(lagrange_a - lagrange_b):.6f}")

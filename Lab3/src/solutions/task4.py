@@ -1,22 +1,22 @@
 import numpy as np
 
+import Lab1.src.solutions.task3_SI as lq
+
 def numerical_derivative(x, y, x_point, method='central'):
-    """Численное дифференцирование"""
     n = len(x)
 
-    # Находим индекс точки
     idx = np.where(np.abs(x - x_point) < 1e-10)[0][0]
 
     if method == 'forward' and idx < n - 1:
-        # Правосторонняя производная
+        # 3.18
         return (y[idx + 1] - y[idx]) / (x[idx + 1] - x[idx])
 
     elif method == 'backward' and idx > 0:
-        # Левосторонняя производная
+        # 3.18
         return (y[idx] - y[idx - 1]) / (x[idx] - x[idx - 1])
 
-    elif method == 'central' and idx > 0 and idx < n - 1:
-        # Центральная разность (второй порядок)
+    elif method == 'central' and 0 < idx < n - 1:
+        # 3.20
         return (y[idx + 1] - y[idx - 1]) / (x[idx + 1] - x[idx - 1])
 
     else:
@@ -24,13 +24,13 @@ def numerical_derivative(x, y, x_point, method='central'):
 
 
 def numerical_second_derivative(x, y, x_point):
-    """Численная вторая производная"""
     n = len(x)
     idx = np.where(np.abs(x - x_point) < 1e-10)[0][0]
 
-    if idx > 0 and idx < n - 1:
+    if 0 < idx < n - 1:
         h1 = x[idx] - x[idx - 1]
         h2 = x[idx + 1] - x[idx]
+        # 3.21
         return ((y[idx + 1] - y[idx]) / h2 - (y[idx] - y[idx - 1]) / h1) / ((h1 + h2) / 2)
 
     return None

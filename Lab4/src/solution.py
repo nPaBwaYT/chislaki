@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Callable, Tuple
+import Lab1.src.solutions.task3_SI as lq
 
 
 def euler_method_system(f: Callable, y0: np.ndarray, t_span: Tuple[float, float], h: float):
@@ -147,7 +148,7 @@ print(f"Метод Адамса:         y(1.0) = {y_adams_solution[-1]:.10f}, �
 
 print(f"\nОценка погрешности методом Рунге-Ромберга для РК4: max = {np.max(error_rr):.2e}")
 
-print("\nx\t\tЭйлер\t\tЭйлер-Коши\tУлучшенный\tРК4\t\tАдамс\t\tТочное")
+print("\nx\t\tЭйлер    \t\tЭйлер-Коши    \tУлучшенный  \tРК4        \t\tАдамс    \t\tТочное")
 for i in range(len(t_rk4)):
     print(f"{t_rk4[i]:.1f}\t\t{y_euler_solution[i]:.6f}\t\t{y_euler_cauchy_solution[i]:.6f}\t\t"
           f"{y_improved_solution[i]:.6f}\t\t{y_rk4_solution[i]:.6f}\t\t{y_adams_solution[i]:.6f}\t\t{y_exact_cauchy[i]:.6f}")
@@ -203,17 +204,19 @@ def finite_difference_method(p, q, f_func, bc_left, bc_right,
         A[i, i + 1] = 1 + p(x[i]) * h / 2
         B[i] = h ** 2 * f_func(x[i])
 
+    # Левое
     A[0, 0] = -3
     A[0, 1] = 4
     A[0, 2] = -1
     B[0] = 2 * h * (-1)
 
+    # Правое
     A[n, n - 2] = 1
     A[n, n - 1] = -4
-    A[n, n] = 3 + 4 * h
+    A[n, n] = 3 + 2 * 2 * h
     B[n] = 2 * h * 3
 
-    y = np.linalg.solve(A, B)
+    y = lq.main(A, B)
 
     return x, y
 
